@@ -1,0 +1,17 @@
+ANANT CHAUDHARY
+Full Stack Developer
+
+SUMMARY
+Computer science graduate building full-stack web applications with JavaScript, React, Node.js, Express and MongoDB. Strong foundation in Python, OOP, DSA and REST APIs.
+
+SKILLS
+Python, JavaScript, HTML, CSS, React, Node.js, Express, MongoDB, Git, DSA, OOP, REST API, SQL.
+
+PROJECTS
+DevConnect AI — Built a developer networking platform with JWT authentication, MongoDB, React and Express. Added a Python service for resume analysis, recommendations and DSA algorithms.
+
+EXPERIENCE
+Built and tested REST APIs, implemented authentication, handled errors and used Git for version control.
+
+EDUCATION
+Bachelor's degree in Computer Science.
