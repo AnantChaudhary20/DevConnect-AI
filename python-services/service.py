@@ -113,17 +113,19 @@ class IntelligenceHandler(BaseHTTPRequestHandler):
 
 
 def run():
-    host = os.getenv("PYTHON_HOST", "127.0.0.1")
-    port = int(os.getenv("PYTHON_PORT", "8000"))
+    host = os.getenv("PYTHON_HOST", "0.0.0.0")
+    port = int(os.getenv("PORT", os.getenv("PYTHON_PORT", "8000")))
+
     server = ThreadingHTTPServer((host, port), IntelligenceHandler)
+
     print(f"DevConnect AI Python service running at http://{host}:{port}")
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\nStopping Python service...")
     finally:
         server.server_close()
-
 
 if __name__ == "__main__":
     run()
