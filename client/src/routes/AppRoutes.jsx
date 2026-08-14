@@ -24,6 +24,9 @@ import Login
 import Signup
     from "../pages/Signup/Signup";
 
+import VerifyEmail
+    from "../pages/VerifyEmail/VerifyEmail";
+
 import Feed
     from "../pages/Feed/Feed";
 
@@ -76,6 +79,11 @@ function AppRoutes() {
                     <Route
                         path="/signup"
                         element={<Signup />}
+                    />
+
+                    <Route
+                        path="/verify-email"
+                        element={<VerifyEmail />}
                     />
 
                 </Route>

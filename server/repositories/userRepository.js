@@ -5,7 +5,7 @@ const findById = async (id) => {
 };
 
 const findByIdWithoutPassword = async (id) => {
-    return await User.findById(id).select("-password");
+    return await User.findById(id).select("-password -emailVerificationCode -emailVerificationExpires");
 };
 
 const findByEmail = async (email) => {
@@ -24,7 +24,7 @@ const updateById = async (id, updateData) => {
             new: true,
             runValidators: true
         }
-    ).select("-password");
+    ).select("-password -emailVerificationCode -emailVerificationExpires");
 };
 
 const saveUser = async (user) => {
@@ -43,7 +43,7 @@ const updateProfile = async (userId, data) => {
             runValidators: true
         }
 
-    ).select("-password");
+    ).select("-password -emailVerificationCode -emailVerificationExpires");
 
 };
 const findUserWithFollowers = async (id) => {

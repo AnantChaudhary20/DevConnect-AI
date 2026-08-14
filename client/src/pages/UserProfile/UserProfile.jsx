@@ -158,8 +158,8 @@ function UserProfile() {
         <div className="
             max-w-5xl
             mx-auto
-            px-6
-            py-10
+            px-4 sm:px-6
+            py-8 sm:py-10
         ">
 
 

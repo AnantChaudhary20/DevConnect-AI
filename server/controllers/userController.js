@@ -61,7 +61,7 @@ const getPublicProfile = async (
                 req.params.userId
             )
                 .select(
-                    "-password"
+                    "-password -emailVerificationCode -emailVerificationExpires"
                 );
 
 

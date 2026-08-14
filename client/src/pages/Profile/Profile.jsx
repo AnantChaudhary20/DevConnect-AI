@@ -140,8 +140,8 @@ function Profile() {
         <div className="
             max-w-5xl
             mx-auto
-            px-6
-            py-10
+            px-4 sm:px-6
+            py-8 sm:py-10
         ">
 
 
@@ -169,23 +169,11 @@ function Profile() {
 
                     <div>
 
-                        <img
-                            src={
-                                user.profilePicture ||
-                                "https://via.placeholder.com/160?text=Developer"
-                            }
-                            alt={
-                                user.name
-                            }
-                            className="
-                                w-36
-                                h-36
-                                rounded-full
-                                object-cover
-                                border-4
-                                border-slate-700
-                            "
-                        />
+                        {user.profilePicture ? (
+                            <img src={user.profilePicture} alt={user.name} className="w-36 h-36 rounded-full object-cover border-4 border-slate-700" />
+                        ) : (
+                            <div className="w-36 h-36 rounded-full border-4 border-slate-700 bg-slate-800 flex items-center justify-center text-slate-300 font-semibold text-center px-3">No photo</div>
+                        )}
 
                     </div>
 

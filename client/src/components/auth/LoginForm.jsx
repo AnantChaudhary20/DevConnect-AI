@@ -26,6 +26,7 @@ function LoginForm() {
     const location = useLocation();
 
     const [serverError, setServerError] = useState("");
+    const [needsVerification, setNeedsVerification] = useState(false);
     const [successMessage, setSuccessMessage] = useState(
         location.state?.signupSuccess || ""
     );
@@ -42,6 +43,7 @@ function LoginForm() {
     const onSubmit = async (data) => {
         setServerError("");
         setSuccessMessage("");
+        setNeedsVerification(false);
 
         try {
             const response = await loginUser(data);
@@ -55,10 +57,11 @@ function LoginForm() {
 
             navigate("/feed");
         } catch (error) {
-            setServerError(
+            const message =
                 error.response?.data?.message ||
-                "Login failed. Please check your email and password."
-            );
+                "Login failed. Please check your email and password.";
+            setServerError(message);
+            setNeedsVerification(error.response?.status === 403);
         }
     };
 
@@ -92,7 +95,15 @@ function LoginForm() {
                     role="alert"
                     className="mb-5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
                 >
-                    {serverError}
+                    <p>{serverError}</p>
+                    {needsVerification && (
+                        <Link
+                            to="/verify-email"
+                            className="inline-block mt-2 font-semibold text-blue-300 hover:text-blue-200"
+                        >
+                            Verify your email
+                        </Link>
+                    )}
                 </div>
             )}
 

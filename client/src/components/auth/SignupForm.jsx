@@ -33,12 +33,9 @@ function SignupForm() {
                 password: data.password
             });
 
-            navigate("/login", {
+            navigate("/verify-email", {
                 replace: true,
-                state: {
-                    signupSuccess:
-                        "Account created successfully. Please log in."
-                }
+                state: { email: data.email.trim() }
             });
         } catch (error) {
             const validationErrors =
