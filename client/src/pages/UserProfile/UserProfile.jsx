@@ -193,8 +193,10 @@ function UserProfile() {
                         className="
                             w-36
                             h-36
+                            shrink-0
                             rounded-full
                             object-cover
+                            object-center
                             border-4
                             border-slate-700
                         "
@@ -269,89 +271,19 @@ function UserProfile() {
                         )}
 
 
-                        <div className="
-                            flex
-                            gap-8
-                            mt-6
-                        ">
-
-
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        user.followers?.length ||
-                                        0
-                                    }
-
-                                </p>
-
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Followers
-
-                                </p>
-
+                        <div className="flex flex-wrap gap-6 mt-6">
+                            <Link to={`/connections/${user._id}`} className="group rounded-xl p-2 -m-2 hover:bg-slate-800/70 transition">
+                                <p className="text-2xl font-bold group-hover:text-blue-300">{user.followers?.length || 0}</p>
+                                <p className="text-slate-400 text-sm">Followers</p>
+                            </Link>
+                            <Link to={`/connections/${user._id}`} className="group rounded-xl p-2 -m-2 hover:bg-slate-800/70 transition">
+                                <p className="text-2xl font-bold group-hover:text-blue-300">{user.following?.length || 0}</p>
+                                <p className="text-slate-400 text-sm">Following</p>
+                            </Link>
+                            <div className="rounded-xl p-2 -m-2">
+                                <p className="text-2xl font-bold">{projects.length}</p>
+                                <p className="text-slate-400 text-sm">Projects</p>
                             </div>
-
-
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        user.following?.length ||
-                                        0
-                                    }
-
-                                </p>
-
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Following
-
-                                </p>
-
-                            </div>
-
-
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        projects.length
-                                    }
-
-                                </p>
-
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Projects
-
-                                </p>
-
-                            </div>
-
                         </div>
 
                     </div>

@@ -223,8 +223,15 @@ const uploadProfilePicture = async (
                                 .upload_stream(
 
                                     {
-                                        folder:
-                                            "devconnect-profile"
+                                        folder: "devconnect-profile",
+                                        transformation: [
+                                            {
+                                                width: 600,
+                                                height: 600,
+                                                crop: "fill",
+                                                gravity: "auto"
+                                            }
+                                        ]
                                     },
 
                                     (

@@ -139,9 +139,9 @@ function EditProfile() {
 
                 <div className="mb-8 pb-8 border-b border-slate-800">
                     <h2 className="text-xl font-bold mb-5">Profile Picture</h2>
-                    <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                         {preview ? (
-                            <img src={preview} alt="Profile" className="w-28 h-28 rounded-full object-cover border-2 border-slate-700" />
+                            <img src={preview} alt="Profile" className="w-28 h-28 shrink-0 rounded-full object-cover object-center border-2 border-blue-500/40 shadow-lg shadow-blue-900/20" />
                         ) : (
                             <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center text-slate-400 text-center font-semibold px-3">
                                 No photo

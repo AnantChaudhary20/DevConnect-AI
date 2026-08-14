@@ -21,8 +21,14 @@ const analyzeResumePdf = async (req, res, next) => {
     try {
         if (!req.file) return res.status(400).json({ success: false, message: "Please upload a PDF resume." });
         if (req.file.mimetype !== "application/pdf") return res.status(400).json({ success: false, message: "Only PDF files are supported." });
-        const pdfParse = require("pdf-parse");
-        const parsed = await pdfParse(req.file.buffer);
+        const { PDFParse } = require("pdf-parse");
+        const parser = new PDFParse({ data: req.file.buffer });
+        let parsed;
+        try {
+            parsed = await parser.getText();
+        } finally {
+            await parser.destroy();
+        }
         const resumeText = String(parsed.text || "").trim();
         if (resumeText.length < 80) return res.status(400).json({ success: false, message: "The PDF does not contain enough readable text. Please upload a text-based PDF." });
         const result = await intelligenceService.analyzeResume(resumeText, req.body.targetRole);

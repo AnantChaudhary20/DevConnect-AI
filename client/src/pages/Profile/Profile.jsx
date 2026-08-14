@@ -170,7 +170,7 @@ function Profile() {
                     <div>
 
                         {user.profilePicture ? (
-                            <img src={user.profilePicture} alt={user.name} className="w-36 h-36 rounded-full object-cover border-4 border-slate-700" />
+                            <img src={user.profilePicture} alt={user.name} className="w-36 h-36 shrink-0 rounded-full object-cover object-center border-4 border-slate-700" />
                         ) : (
                             <div className="w-36 h-36 rounded-full border-4 border-slate-700 bg-slate-800 flex items-center justify-center text-slate-300 font-semibold text-center px-3">No photo</div>
                         )}
@@ -270,85 +270,22 @@ function Profile() {
                         ">
 
 
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        user.followers?.length ||
-                                        0
-                                    }
-
-                                </p>
+                            <Link to={`/connections/${user._id}`} className="group rounded-xl p-2 -m-2 hover:bg-slate-800/70 transition">
+                                <p className="text-2xl font-bold group-hover:text-blue-300 transition">{user.followers?.length || 0}</p>
+                                <p className="text-slate-400 text-sm">Followers</p>
+                            </Link>
 
 
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Followers
-
-                                </p>
-
-                            </div>
+                            <Link to={`/connections/${user._id}`} className="group rounded-xl p-2 -m-2 hover:bg-slate-800/70 transition">
+                                <p className="text-2xl font-bold group-hover:text-blue-300 transition">{user.following?.length || 0}</p>
+                                <p className="text-slate-400 text-sm">Following</p>
+                            </Link>
 
 
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        user.following?.length ||
-                                        0
-                                    }
-
-                                </p>
-
-
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Following
-
-                                </p>
-
-                            </div>
-
-
-                            <div>
-
-                                <p className="
-                                    text-2xl
-                                    font-bold
-                                ">
-
-                                    {
-                                        user.bookmarks?.length ||
-                                        0
-                                    }
-
-                                </p>
-
-
-                                <p className="
-                                    text-slate-400
-                                    text-sm
-                                ">
-
-                                    Bookmarks
-
-                                </p>
-
-                            </div>
+                            <Link to="/bookmarks" className="group rounded-xl p-2 -m-2 hover:bg-slate-800/70 transition">
+                                <p className="text-2xl font-bold group-hover:text-blue-300 transition">{user.bookmarks?.length || 0}</p>
+                                <p className="text-slate-400 text-sm">Bookmarks</p>
+                            </Link>
 
                         </div>
 
