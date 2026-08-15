@@ -19,21 +19,57 @@ const analyzeResume = async (req, res, next) => {
 
 const analyzeResumePdf = async (req, res, next) => {
     try {
-        if (!req.file) return res.status(400).json({ success: false, message: "Please upload a PDF resume." });
-        if (req.file.mimetype !== "application/pdf") return res.status(400).json({ success: false, message: "Only PDF files are supported." });
-        const { PDFParse } = require("pdf-parse");
-        const parser = new PDFParse({ data: req.file.buffer });
-        let parsed;
-        try {
-            parsed = await parser.getText();
-        } finally {
-            await parser.destroy();
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Please upload a PDF resume." });
         }
-        const resumeText = String(parsed.text || "").trim();
-        if (resumeText.length < 80) return res.status(400).json({ success: false, message: "The PDF does not contain enough readable text. Please upload a text-based PDF." });
+
+        const isPdf =
+            req.file.mimetype === "application/pdf" ||
+            /\.pdf$/i.test(req.file.originalname || "");
+
+        if (!isPdf) {
+            return res.status(400).json({ success: false, message: "Only PDF files are supported." });
+        }
+
+        let resumeText = "";
+        const pdfParser = require("pdf-parse");
+
+        // pdf-parse v1 is the locked production dependency. The fallback also
+        // keeps this endpoint compatible if a deployment happens to resolve v2.
+        if (typeof pdfParser === "function") {
+            const parsed = await pdfParser(req.file.buffer);
+            resumeText = String(parsed?.text || "").replace(/\s+/g, " ").trim();
+        } else {
+            const { PDFParse } = pdfParser;
+            const parser = new PDFParse({ data: req.file.buffer });
+            try {
+                const parsed = await parser.getText();
+                resumeText = String(parsed?.text || "").replace(/\s+/g, " ").trim();
+            } finally {
+                await parser.destroy();
+            }
+        }
+
+        if (resumeText.length < 80) {
+            return res.status(422).json({
+                success: false,
+                message: "The PDF was uploaded, but too little readable text was extracted. Please use a text-based/selectable-text PDF rather than a scanned image PDF."
+            });
+        }
+
         const result = await intelligenceService.analyzeResume(resumeText, req.body.targetRole);
-        return res.status(200).json(result);
-    } catch (error) { next(error); }
+        return res.status(200).json({
+            ...result,
+            resume: {
+                fileName: req.file.originalname,
+                extractedCharacters: resumeText.length
+            }
+        });
+    } catch (error) {
+        console.error("[Resume PDF]", error);
+        error.statusCode = error.statusCode || 422;
+        next(error);
+    }
 };
 
 const getRecommendations = async (req, res, next) => {

@@ -42,8 +42,14 @@ class RecommendationEngine:
             related_bonus = len(wanted.intersection(related)) * 2
             score = len(overlap) * 10 + related_bonus
 
-            if score <= 0:
-                continue
+            # Keep zero-overlap candidates as a fallback so the feature still
+            # produces useful people to discover when a profile has few/no skills.
+            profile_completeness = sum(
+                bool(candidate.get(field))
+                for field in ("bio", "github", "linkedin", "location", "profilePicture")
+            )
+            if score == 0 and candidate_skills:
+                score = min(4, profile_completeness)
 
             results.append({
                 "user": candidate,
@@ -52,7 +58,15 @@ class RecommendationEngine:
                 "sharedSkillCount": len(overlap),
                 "relatedSkillBonus": related_bonus,
                 "missingSkills": sorted(wanted - candidate_skills),
+                "reason": (
+                    "Shared skills" if overlap else
+                    "Related skills" if related else
+                    "Developer to discover"
+                ),
             })
 
-        results = merge_sort(results, key=lambda item: (-item["score"], item["user"].get("name", "")))
+        results = merge_sort(
+            results,
+            key=lambda item: (-item["score"], item["user"].get("name", "").lower())
+        )
         return results[: max(1, min(int(limit), 20))]

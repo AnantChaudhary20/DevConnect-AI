@@ -34,6 +34,7 @@ function AILab() {
     const [algorithmResult, setAlgorithmResult] = useState(null);
     const [loadingAction, setLoadingAction] = useState("");
     const [health, setHealth] = useState(null);
+    const [actionError, setActionError] = useState("");
 
     const loadHealth = async () => {
         try {
@@ -57,33 +58,53 @@ function AILab() {
         loadHealth();
     }, []);
 
-    const handlePdfUpload = async (event) => {
+    const handlePdfUpload = (event) => {
         const file = event.target.files?.[0];
         event.target.value = "";
 
         if (!file) return;
         if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-            toast.error("Only PDF files are accepted.");
+            const message = "Only PDF files are accepted.";
+            setActionError(message);
+            toast.error(message);
             return;
         }
         if (file.size > 5 * 1024 * 1024) {
-            toast.error("PDF must be smaller than 5MB.");
+            const message = "PDF must be smaller than 5MB.";
+            setActionError(message);
+            toast.error(message);
             return;
         }
 
         setResumeFile(file);
         setAnalysis(null);
-        setLoadingAction("resume");
+        setActionError("");
+    };
 
+    const handleAnalyzeResume = async () => {
+        if (!resumeFile) {
+            const message = "Choose a PDF resume first.";
+            setActionError(message);
+            toast.error(message);
+            return;
+        }
+
+        setLoadingAction("resume");
+        setActionError("");
         try {
-            const response = await analyzeResumePdf(file, targetRole);
+            const response = await analyzeResumePdf(resumeFile, targetRole);
+            if (!response?.analysis) {
+                throw new Error(response?.message || "The analyzer returned no result.");
+            }
             setAnalysis(response.analysis);
             toast.success("Resume analyzed successfully.");
         } catch (error) {
-            toast.error(
+            const message =
                 error?.response?.data?.message ||
-                "Could not analyze the PDF resume."
-            );
+                error?.message ||
+                "Could not analyze the PDF resume.";
+            setActionError(message);
+            toast.error(message);
         } finally {
             setLoadingAction("");
             loadHealth();
@@ -92,21 +113,25 @@ function AILab() {
 
     const handleRecommendations = async () => {
         setLoadingAction("recommendations");
-
+        setActionError("");
         try {
             const response = await getDeveloperRecommendations(6);
-            setRecommendations(response.recommendations || []);
-
-            if ((response.recommendations || []).length === 0) {
-                toast("Add a few skills to your profile to get better matches.");
+            if (!Array.isArray(response?.recommendations)) {
+                throw new Error(response?.message || "No recommendations were returned.");
+            }
+            setRecommendations(response.recommendations);
+            if (response.recommendations.length === 0) {
+                toast("No other developer profiles are available yet.");
             } else {
                 toast.success("Developer matches updated.");
             }
         } catch (error) {
-            toast.error(
+            const message =
                 error?.response?.data?.message ||
-                "Could not load developer matches."
-            );
+                error?.message ||
+                "Could not load developer matches.";
+            setActionError(message);
+            toast.error(message);
         } finally {
             setLoadingAction("");
             loadHealth();
@@ -115,16 +140,21 @@ function AILab() {
 
     const handleAlgorithmDemo = async () => {
         setLoadingAction("algorithms");
-
+        setActionError("");
         try {
             const response = await runAlgorithmDemo(demoPayload);
+            if (!response?.success) {
+                throw new Error(response?.message || "The DSA service returned no result.");
+            }
             setAlgorithmResult(response);
             toast.success("DSA playground completed successfully.");
         } catch (error) {
-            toast.error(
+            const message =
                 error?.response?.data?.message ||
-                "DSA playground failed."
-            );
+                error?.message ||
+                "DSA playground failed.";
+            setActionError(message);
+            toast.error(message);
         } finally {
             setLoadingAction("");
             loadHealth();
@@ -145,7 +175,7 @@ function AILab() {
                             </span>
                             <h1 className="text-3xl sm:text-4xl font-extrabold mt-4">DevConnect AI Lab</h1>
                             <p className="text-slate-400 mt-3 max-w-3xl leading-7">
-                                Work with your resume, discover developers with similar skills, and experiment with core DSA algorithms from one place.
+                                Analyze a PDF resume, discover developers, and run DSA demonstrations from one place.
                             </p>
                         </div>
                         <button
@@ -169,6 +199,12 @@ function AILab() {
                 </div>
             </div>
 
+            {actionError && (
+                <div className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-200">
+                    {actionError}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-5 sm:p-7 shadow-2xl shadow-black/10">
                     <div className="flex items-start justify-between gap-4">
@@ -179,7 +215,7 @@ function AILab() {
                         <span className="rounded-full border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300">PDF only</span>
                     </div>
                     <p className="text-slate-400 mt-3 leading-6">
-                        Upload a text-based PDF resume and compare its skills with a target role using the Python analyzer.
+                        Upload a selectable-text PDF, choose a target role, and receive an explainable ATS-style score with concrete improvement suggestions.
                     </p>
 
                     <div className="mt-6 space-y-5">
@@ -210,12 +246,19 @@ function AILab() {
                         </label>
 
                         {resumeFile && (
-                            <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/60 px-4 py-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-950/60 px-4 py-3">
                                 <div className="min-w-0">
                                     <p className="text-sm font-semibold text-slate-200 truncate">{resumeFile.name}</p>
-                                    <p className="text-xs text-slate-500 mt-1">PDF selected</p>
+                                    <p className="text-xs text-slate-500 mt-1">PDF ready for analysis</p>
                                 </div>
-                                {loadingAction === "resume" && <span className="text-xs font-semibold text-blue-300">Analyzing…</span>}
+                                <button
+                                    type="button"
+                                    onClick={handleAnalyzeResume}
+                                    disabled={loadingAction === "resume"}
+                                    className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-500 disabled:opacity-50"
+                                >
+                                    {loadingAction === "resume" ? "Analyzing…" : "Analyze Resume"}
+                                </button>
                             </div>
                         )}
                     </div>
@@ -223,12 +266,25 @@ function AILab() {
                     {analysis && (
                         <div className="mt-7 space-y-5">
                             <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-slate-950 p-5">
-                                <p className="text-sm text-slate-400">ATS skill score</p>
+                                <p className="text-sm text-slate-400">ATS-style resume score</p>
                                 <div className="flex items-end gap-3 mt-1">
-                                    <span className="text-5xl font-extrabold text-white">{analysis.score}</span>
+                                    <span className="text-5xl font-extrabold text-white">{analysis.atsScore ?? analysis.score}</span>
                                     <span className="text-slate-400 mb-2">/ 100</span>
                                 </div>
+                                <p className="text-xs text-slate-500 mt-2">Role: {analysis.targetRole}</p>
                             </div>
+
+                            {analysis.scoreBreakdown && (
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    {Object.entries(analysis.scoreBreakdown).map(([key, value]) => (
+                                        <div key={key} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
+                                            <p className="text-xs uppercase tracking-wide text-slate-500">{key.replace(/([A-Z])/g, " $1")}</p>
+                                            <p className="mt-1 text-2xl font-bold text-white">{value}/100</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
                             {[
                                 ["Matched skills", analysis.matchedSkills || [], "emerald"],
                                 ["Missing skills", analysis.missingSkills || [], "red"],
@@ -245,6 +301,17 @@ function AILab() {
                                     </div>
                                 </div>
                             ))}
+
+                            {Array.isArray(analysis.improvementSuggestions) && analysis.improvementSuggestions.length > 0 && (
+                                <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
+                                    <p className="text-sm font-semibold text-amber-200">How to improve the ATS score</p>
+                                    <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-300">
+                                        {analysis.improvementSuggestions.map((suggestion) => (
+                                            <li key={suggestion}>• {suggestion}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                         </div>
                     )}
                 </section>
@@ -253,7 +320,7 @@ function AILab() {
                     <p className="text-sm font-semibold text-purple-400">2 · Discover</p>
                     <h2 className="text-2xl font-bold mt-1">Find Developers</h2>
                     <p className="text-slate-400 mt-3 leading-6">
-                        Match your profile skills with other developers and see the skills you have in common.
+                        Match your profile skills with other developers. When no overlap exists, the lab still shows active developer profiles to discover.
                     </p>
 
                     <button
@@ -268,8 +335,8 @@ function AILab() {
                     <div className="mt-6 space-y-3">
                         {recommendations.length === 0 ? (
                             <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-6 text-center">
-                                <p className="font-semibold text-slate-300">No matches loaded yet</p>
-                                <p className="mt-2 text-sm text-slate-500">Use the button above to search for developers with overlapping skills.</p>
+                                <p className="font-semibold text-slate-300">No developer results yet</p>
+                                <p className="mt-2 text-sm text-slate-500">Click Find Developers to load profiles.</p>
                             </div>
                         ) : recommendations.map((item) => (
                             <div key={item.user._id} className="rounded-2xl border border-slate-800 bg-slate-950/40 p-4 hover:border-purple-500/30 transition">
@@ -277,10 +344,13 @@ function AILab() {
                                     <img src={item.user.profilePicture || "https://via.placeholder.com/80?text=User"} alt={item.user.name} className="h-12 w-12 rounded-full object-cover object-center border border-slate-700" />
                                     <div className="min-w-0 flex-1">
                                         <h3 className="font-bold truncate">{item.user.name}</h3>
-                                        <p className="text-sm text-slate-400 mt-1 truncate">{(item.matchedSkills || []).join(", ") || "Related skills"}</p>
+                                        <p className="text-sm text-slate-400 mt-1 truncate">{item.reason || (item.matchedSkills || []).join(", ") || "Developer to discover"}</p>
                                     </div>
                                     <span className="rounded-full bg-blue-500/10 px-3 py-1 text-sm font-bold text-blue-300">{item.score}</span>
                                 </div>
+                                {item.matchedSkills?.length > 0 && (
+                                    <p className="mt-3 text-xs text-slate-500">Shared: {item.matchedSkills.join(", ")}</p>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -301,9 +371,23 @@ function AILab() {
                         </button>
 
                         {algorithmResult && (
-                            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950">
-                                <div className="border-b border-slate-800 px-4 py-3 text-sm font-semibold text-slate-300">Algorithm output</div>
-                                <pre className="max-h-80 overflow-auto p-4 text-xs sm:text-sm text-slate-300">{JSON.stringify(algorithmResult, null, 2)}</pre>
+                            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                                    <p className="text-xs uppercase tracking-wide text-slate-500">Merge sort</p>
+                                    <p className="mt-2 text-sm text-slate-200">{algorithmResult.sorted?.join(", ")}</p>
+                                </div>
+                                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                                    <p className="text-xs uppercase tracking-wide text-slate-500">Binary search</p>
+                                    <p className="mt-2 text-2xl font-bold text-white">Index {algorithmResult.targetIndex}</p>
+                                </div>
+                                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                                    <p className="text-xs uppercase tracking-wide text-slate-500">LCS length</p>
+                                    <p className="mt-2 text-2xl font-bold text-white">{algorithmResult.lcsExample}</p>
+                                </div>
+                                <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+                                    <p className="text-xs uppercase tracking-wide text-slate-500">Knapsack picks</p>
+                                    <p className="mt-2 text-sm text-slate-200">{(algorithmResult.knapsackExample || []).map((item) => item.name).join(", ") || "None"}</p>
+                                </div>
                             </div>
                         )}
                     </div>

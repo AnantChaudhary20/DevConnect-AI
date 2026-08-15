@@ -15,6 +15,18 @@ const LOCATIONS = [
 const GITHUB_PATTERN = /^https:\/\/github\.com\/[A-Za-z0-9-]+\/?$/;
 const LINKEDIN_PATTERN = /^https:\/\/www\.linkedin\.com\/in\/[A-Za-z0-9._-]+\/?$/;
 
+const getCenteredProfileImageUrl = (url) => {
+    if (!url || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+
+    const [prefix, suffix] = url.split("/upload/");
+    const segments = suffix.split("/");
+    const knownTransform = /^(?:w_|h_|c_|g_|q_|f_|dpr_|ar_|x_|y_|x_)/;
+    if (segments.length && segments[0].split(",").some((value) => knownTransform.test(value))) {
+        segments.shift();
+    }
+    return `${prefix}/upload/w_320,h_320,c_fill,g_face,q_auto/${segments.join("/")}`;
+};
+
 function EditProfile() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
@@ -38,7 +50,7 @@ function EditProfile() {
             portfolio: user.portfolio || "",
             location: user.location || ""
         });
-        setPreview(user.profilePicture || "");
+        setPreview(getCenteredProfileImageUrl(user.profilePicture || ""));
     }, [user]);
 
     const handleChange = (event) => {
@@ -115,7 +127,7 @@ function EditProfile() {
                     "Content-Type": "multipart/form-data"
                 }
             });
-            setPreview(response.data.profilePicture);
+            setPreview(getCenteredProfileImageUrl(response.data.profilePicture));
             dispatch(setUser({ ...user, profilePicture: response.data.profilePicture }));
             setProfilePicture(null);
             setMessage("Profile picture updated successfully.");
@@ -141,7 +153,7 @@ function EditProfile() {
                     <h2 className="text-xl font-bold mb-5">Profile Picture</h2>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                         {preview ? (
-                            <img src={preview} alt="Profile" className="w-28 h-28 shrink-0 rounded-full object-cover object-center border-2 border-blue-500/40 shadow-lg shadow-blue-900/20" />
+                            <img src={preview} alt="Profile" className="w-28 h-28 shrink-0 rounded-full object-cover border-2 border-blue-500/40 shadow-lg shadow-blue-900/20" style={{ objectPosition: "50% 50%" }} />
                         ) : (
                             <div className="w-28 h-28 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center text-slate-400 text-center font-semibold px-3">
                                 No photo

@@ -83,9 +83,31 @@ class ResumeAnalyzer:
                 missing.append({"skill": skill, "weight": weight})
 
         total_weight = sum(weight for _, weight in required) or 1
-        score = round(sum(item["weight"] for item in matched) / total_weight * 100)
+        keyword_score = round(sum(item["weight"] for item in matched) / total_weight * 100)
 
-        # Use knapsack to produce a practical learning plan within 10 effort units.
+        # ATS-style structure signals: deterministic and explainable, not a claim
+        # to reproduce a proprietary ATS exactly.
+        raw = resume_text or ""
+        lowered = raw.lower()
+        section_signals = {
+            "contact": bool(re.search(r"[\w.+-]+@[\w-]+\.[\w.-]+", raw)) or bool(re.search(r"(?:\+?\d[\d ()-]{8,}\d)", raw)),
+            "summary": bool(re.search(r"\b(summary|objective|profile|about me)\b", lowered)),
+            "experience": bool(re.search(r"\b(experience|employment|work history|professional experience)\b", lowered)),
+            "projects": bool(re.search(r"\b(projects?|portfolio)\b", lowered)),
+            "education": bool(re.search(r"\b(education|bachelor|master|b\.s\.|b\.tech|m\.tech|degree)\b", lowered)),
+            "skills": bool(re.search(r"\b(skills|technical skills|technologies)\b", lowered)),
+        }
+        section_score = round(sum(section_signals.values()) / len(section_signals) * 100)
+
+        action_verbs = len(re.findall(
+            r"\b(built|developed|designed|implemented|optimized|automated|deployed|led|created|integrated|improved|tested)\b",
+            lowered,
+        ))
+        quantified = len(re.findall(r"(?:\b\d+%|\b\d+\+|\b\d+(?:k|m)\b|\$\d+)", lowered))
+        impact_score = min(100, action_verbs * 8 + quantified * 12)
+
+        score = round(keyword_score * 0.60 + section_score * 0.25 + impact_score * 0.15)
+
         learning_items = [
             {
                 "name": item["skill"],
@@ -96,12 +118,32 @@ class ResumeAnalyzer:
         ]
         recommendations = knapsack_select(learning_items, 10)
 
+        warnings = []
+        if not section_signals["summary"]:
+            warnings.append("Add a short professional summary tailored to the target role.")
+        if not section_signals["experience"]:
+            warnings.append("Add an Experience section with measurable outcomes.")
+        if not section_signals["projects"]:
+            warnings.append("Add 1–3 relevant projects with technologies and impact.")
+        if not section_signals["skills"]:
+            warnings.append("Add a clearly labeled Skills/Technologies section.")
+        if quantified == 0:
+            warnings.append("Quantify achievements with numbers, percentages, scale, or time saved where possible.")
+
         result = {
             "targetRole": role,
             "score": score,
+            "atsScore": score,
+            "scoreBreakdown": {
+                "keywordMatch": keyword_score,
+                "sectionCoverage": section_score,
+                "impactSignals": impact_score,
+            },
             "matchedSkills": [item["skill"] for item in matched],
             "missingSkills": [item["skill"] for item in missing],
             "recommendedNextSkills": [item["name"] for item in recommendations],
+            "sectionChecks": section_signals,
+            "improvementSuggestions": warnings,
             "generatedAt": datetime.now(timezone.utc).isoformat(),
         }
 
